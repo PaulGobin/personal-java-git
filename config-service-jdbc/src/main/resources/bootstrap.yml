@@ -1,0 +1,23 @@
+
+### This is the spring application name, all discovery client MUST have the discovery 
+### Service name bvn-config-service in their bootstrap.yml files 
+spring:
+  application:
+    name: config-service
+  profiles:
+    active: config-service
+    
+# used for registering this service with our eureka service registry cluster instance
+eureka:
+  client:
+    region: default
+    enabled: true #Register the config-service with eureka, false if you don't want to
+    registryFetchIntervalSeconds: 30
+    serviceUrl:
+      # Have this point to our VIP to the Service Registry
+      defaultZone: http://host-where-eureks-is-running:8761/eureka/
+
+# key used for the symmetrical encryption method this MUSt be in bootstrap.yml or an environment variable
+encrypt:
+  key: cry havoc and lets slip the dogs of war
+    

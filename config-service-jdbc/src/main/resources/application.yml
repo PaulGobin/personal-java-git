@@ -1,0 +1,58 @@
+# Defines the port where the config server is running so that rest of the services can pick up 
+# their external configurations
+server:
+  port: 9999
+
+    # Full authentication is required to access actuator endpoints. Consider adding Spring Security or set 'management.security.enabled' to false.
+    #http://localhost:8888/bus/refresh
+management:
+  security:
+    enabled: true
+   
+        
+security:
+  basic:
+    enabled: true
+  user:
+    name: paul-config-service
+    password: 8a0487ef-7645-4351-9dbd-8bd9e5d5e465
+
+spring:
+  datasource:  
+    driver-class-name: com.inet.tds.TdsDriver
+    url: jdbc:inetdae7:${DB.SERVER:SQLAPPSPRI}?database=${DB.DATABASE:AppConfig}
+    username: ${DB.USERNAME:db-user}
+    password: ${DB.PASSWORD:db-password}
+    dbcp2:
+      test-on-borrow: true
+      validation-query: SELECT 1
+      driver-class-name: com.inet.tds.TdsDriver
+    
+    hikari:
+      maximum-pool-size: 10
+      pool-name: HIKARI.CONFIGSERVER.CONN.POOL
+      connection-timeout: 10000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+## For push updates to all clients whenever a config changes, issue a post to which will broadcast the change to RabbitMQ Message Bus
+  rabbitmq:
+    host: ${RABBITMQ.HOST:RABBITMQ-HOST}
+    port: ${RABBITMQ.PORT:5672}
+    username: ${RABBITMQ.USERNAME:rmq-user}
+    password: ${RABBITMQ.PASSWORD:rmq-password}   
+---
+### This is where our config-service will pull configurations from        
+spring:
+  cloud:
+    config:
+      server:
+        default-label: ${DEFAULT.LABEL:prod} 
+        bootstrap: true
+        # define a JDBC config repo     
+        bvnjdbc:
+          sql: SELECT KY, VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=? and IsActive=1
+          order: 1
+        
