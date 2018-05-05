@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info"
+	name="spring-boot-log-to-kafka"
+	packages="org.apache.kafka.log4jappender,com.bvn.logger">
+	<encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+
+	<Properties>
+		<!-- comma sep list of kafka servers, you don't need to add all server 
+			that's in the cluster, once it's connected to one, Zookeeper will tell us 
+			about the others -->
+		<Property name="kafka-servers">KAFKA_SERVER.domain.com:9092</Property>
+		<Property name="service-name">template-service</Property>
+	</Properties>
+	<Appenders>
+		<PGKafkaAppender name="PGKafkaAppender" topic="logs">
+			<JsonLayout properties="true" locationInfo="true"
+				complete="false">
+
+
+			</JsonLayout>
+			<!-- Kafka is running on localhost:9092, we only need to connect to one 
+				and the other servers will be detected, but use a , for more than one. You 
+				can pass this is with -Dkafka-servers or SET kafka-servers=host1:port,host2:port -->
+			<Property name="bootstrap.servers">${env:kafka-servers}</Property>
+
+			<!-- Property name starting with send2kafka will cause the key and value 
+				to be sent to kafka example name="send2kafka.serviceName" "My Cool Service" 
+				rill result in "serviceName" : "My Cool Service" being sent to kafka -->
+			<Property name="send2kafka.serviceName">${service-name}</Property>
+			<Property name="send2kafka.serviceVersion">Version 1.0.0</Property>
+			<!-- If you need the logger to lookup a value set the below, SystemProperty 
+				directive tell the logger to lookup a system property, and the .java.version 
+				tels the logger what system property to lookup. To lookup a OperatingSystem 
+				property, see the OperatingSystemProperty setting below -->
+			<Property name="send2kafka.JavaVersion">${SystemProperty.java.version}</Property>
+			<Property name="send2kafka.OSUserName">${SystemProperty.user.name}</Property>
+
+			<!-- Runtime Property directive lookup, currently supported directives 
+				HostName, os.name, os.freeMemory -->
+			<Property name="send2kafka.HostName">"${OperatingSystemProperty.HostName}"
+			</Property>
+			<Property name="send2kafka.OSName">"${OperatingSystemProperty.os.name}"
+			</Property>
+			<Property name="send2kafka.AvailableMemory">"${OperatingSystemProperty.os.freeMemory}"
+			</Property>
+
+			<!-- Environment Property directive, sich as -D oe set s=xxx in bat files -->
+			<Property name="send2kafka.JAVA_HOME">"${EnvironmentProperty.JAVA_HOME}"</Property>
+
+		</PGKafkaAppender>
+
+		<!-- Create a console appender for debugging -->
+		<Console name="stdout" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} %-5p [%-7t] %F:%L - %m%n" />
+		</Console>
+		<Console name="stderr" target="SYSTEM_ERR">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} %-5p [%-7t] %F:%L - %m%n" />
+			<Filters>
+				<ThresholdFilter level="WARN" onMatch="ACCEPT" />
+			</Filters>
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Root level="INFO">
+
+			<AppenderRef ref="PGKafkaAppender" />
+
+			<!-- std and err output to the console -->
+			<AppenderRef ref="stdout" />
+			<AppenderRef ref="stderr" />
+		</Root>
+		<!-- Add these to only log above certaint level so we can acoud recursive 
+			logger warnings -->
+		<Logger name="org.apache.kafka" level="INFO" />
+		<Logger name="org.apache.kafka.clients.NetworkClient"
+			level="INFO" />
+		<Logger name="org.apache.kafka.common.utils.AppInfoParser"
+			level="WARN" />
+		<Logger name="com.kafka.test" level="DEBUG" />
+	</Loggers>
+</Configuration>
+

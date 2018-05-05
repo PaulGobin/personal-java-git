@@ -1,0 +1,35 @@
+### This is the spring application name, all discovery client MUST have the discovery 
+SERVICE-NAME: template-service
+spring:
+  application:
+    name: ${SERVICE-NAME}
+  profiles:
+    active: template-service,common,common-doc,common-rabbitmq,common-db-sqlserver,common-db-mongo,common-kafka
+  
+  cloud:
+    config:
+      enabled: true
+      fail-fast: true
+      username: pg-config-service-user
+      password: 9a0487ef-de66-4218-9dbd-1bd9e5d5e461
+      name: ${SERVICE-NAME}
+      discovery:
+        enabled: true
+        # The config service service id registered with eureka, basically the sprin.application.name of the config service  
+        service-id: pg-config-service
+    inetutils:
+      preferredNetworks:
+        - 192.168
+        - 10.256
+      
+# Pick this up from config service via discovery add the common profile, this is the VIP where this service will use to contact the service registry
+eureka:
+  client:
+#    region: default
+#    registryFetchIntervalSeconds: 30 
+    serviceUrl:
+      # Have this point to a VIP to the Service Registry
+      defaultZone: http://LOADBalancer:8761/eureka/
+      
+      
+      

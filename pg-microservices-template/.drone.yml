@@ -1,0 +1,38 @@
+pipeline:
+# --- create a jar archive
+  build_jar:
+    image: maven:alpine
+    commands:
+    - mvn --batch-mode clean install
+    
+ # --- Run test cases   
+  test:
+    image: maven:alpine
+    commands:
+      - mvn --quiet --batch-mode test
+      
+ # --- Publish to docker hub- see below for conditional   
+  publish:
+    image: plugins/docker
+    username: pgdockerid
+    password: pgdockerid123
+    repo: pgdockerid/windstream-ms-dev
+    tag: bvn-template-service-1.0.0
+#    file: Dockerfile
+
+# --- Auto deploy on rancher
+  rancher:
+    image: peloton/drone-rancher
+    url: http://nydevlnx001.bvn.com:8080
+    access_key: 4A7A1CE9E7244A30CD1C
+    secret_key: xGdk2rt89uGn5btEYehQbq1NESSNsHBtAA8QcBTB
+    service: bvn-template-service
+    docker_image: pgdockerid/windstream-ms-dev:bvn-template-service-1.0.0
+    
+ # -- send slack notification  
+  slack:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/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
+    channel: qa-build-deploy  
+    
+
